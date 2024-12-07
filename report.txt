@@ -1,0 +1,779 @@
+I. Trong môi trường sử dụng container (như Docker), các development frameworks cho frontend, backend, và database được triển khai độc lập và kết hợp với nhau để xây dựng các ứng dụng.
+1. Frontend (Giao diện người dùng)
+Frontend trong container được xây dựng để hiển thị giao diện người dùng. Các framework thường được sử dụng như:
+- React.js: Một thư viện JavaScript để xây dựng giao diện người dùng.
+- Vue.js: Một framework dễ học và phù hợp với các dự án vừa và nhỏ.
+- Next.js: Một framework dựa trên React, hỗ trợ server-side rendering (SSR) và tối ưu hóa SEO.
+- Angular: Một framework mạnh mẽ cho các ứng dụng quy mô lớn.
+Triển khai Frontend trong container:
+- Một container chứa mã frontend và các công cụ build (Webpack, Vite, hoặc Parcel).
+- Sau khi build, mã tĩnh được phục vụ bởi nginx hoặc Node.js Express.
+- Ví dụ: Một container chạy nginx để phân phối nội dung React đã build.
+Công cụ trong Docker:
+- Dockerfile để build ứng dụng frontend.
+- Multi-stage build giúp tối ưu hóa kích thước container.
+
+2. Backend (Xử lý logic và API)
+Backend là phần xử lý logic, quản lý API và kết nối với cơ sở dữ liệu. Node.js rất phổ biến cho backend nhờ khả năng xử lý I/O hiệu quả. Các framework Node.js thường dùng:
+- Express.js: Nhẹ, dễ cấu hình, phổ biến để xây dựng RESTful APIs.
+- Nest.js: Framework mạnh mẽ, hỗ trợ cấu trúc dự án lớn, tích hợp tốt TypeScript.
+- Fastify: Hiệu suất cao, phù hợp với các ứng dụng cần xử lý nhanh.
+- Hapi.js: Framework linh hoạt, hỗ trợ xây dựng API lớn và bảo mật.
+Triển khai Backend trong container:
+- Một container chạy mã backend, thường được quản lý bằng Node.js.
+- Cấu hình các biến môi trường (API keys, URL database) qua file .env.
+Công cụ trong Docker:
+- Docker Compose: Kết hợp backend với các dịch vụ liên quan như database, cache.
+- PM2: Quản lý và giám sát tiến trình Node.js trong container.
+
+3. Database (Lưu trữ dữ liệu) Database-Container: Lắng nghe trên cổng 27017 (MongoDB).
+Node.js tương tác với cơ sở dữ liệu thông qua các thư viện hoặc ORM (Object Relational Mapping). Database không sử dụng Node.js trực tiếp nhưng đóng vai trò quan trọng trong hệ thống:
+- Relational DBs (SQL): PostgreSQL, MySQL, MariaDB.
+- ORM phổ biến: Sequelize, TypeORM.
+- NoSQL DBs: MongoDB, DynamoDB.
+- Thư viện phổ biến: Mongoose (cho MongoDB).
+Triển khai Database trong container:
+- Database thường chạy trong container riêng (ví dụ: postgres:latest hoặc mongo:latest).
+- Dữ liệu được lưu trữ trên volume để không mất dữ liệu khi container tắt.
+Công cụ trong Docker:
+- Volume: Lưu trữ dữ liệu ngoài container.
+- Docker Compose: Kết nối container database với backend.
+
+II. Phân tích các lệnh hữu dụng nhất trong Docker (build, run, volume, v.v.). Giải thich tại sao?
+1. docker build
+Mô tả: Khởi chạy một container từ image đã build.
+Cú pháp:
+		docker run [OPTIONS] <image_name>
+Lý do hữu ích:
+- Cho phép bạn tạo image tùy chỉnh dựa trên cấu hình cụ thể của ứng dụng.
+- Tagging (-t): Giúp bạn quản lý nhiều phiên bản của image (ví dụ: app:v1, app:latest).
+- Tích hợp tốt với CI/CD để tự động hóa quá trình build.
+
+2. docker run
+Mô tả: Khởi chạy một container từ image đã build.
+Cú pháp:
+		docker run [OPTIONS] <image_name>
+Lý do hữu ích:
+- Cho phép bạn chạy và kiểm tra ứng dụng trong môi trường độc lập.
+- Các tùy chọn linh hoạt như:
+	(-p): Gắn cổng container với cổng host (-p 8080:80).
+	(-d): Chạy container ở chế độ nền (detached).
+	(--name): Đặt tên cho container để dễ quản lý.
+
+3. docker ps
+Mô tả: Hiển thị danh sách các container đang chạy.
+Cú pháp:
+		docker ps [OPTIONS]
+Lý do hữu ích:
+- Giúp bạn theo dõi trạng thái container, bao gồm cổng kết nối và ID.
+- Tuỳ chọn (-a): Liệt kê cả container đã dừng.
+
+4. docker logs
+Mô tả: Xem log của container.
+Cú pháp:
+		docker logs [OPTIONS] <container_name|ID>
+Lý do hữu ích:
+- Hữu ích khi debug hoặc kiểm tra trạng thái của ứng dụng chạy trong container.
+- Tùy chọn (-f): Theo dõi log theo thời gian thực.
+
+5. docker volume
+Mô tả: Quản lý dữ liệu persistent bằng volume.
+Cú pháp:
+		docker volume <COMMAND>
+Lý do hữu ích:
+- Giữ dữ liệu không bị mất khi container bị xóa.
+- Tách biệt dữ liệu và logic ứng dụng.
+- Dễ dàng chia sẻ dữ liệu giữa các container.
+Ví dụ:
+Tạo volume:
+		docker volume create app_data
+Gắn volume vào container:
+		docker run -d -v app_data:/app/data my-app
+
+6. docker network
+Mô tả: Tạo và quản lý mạng giữa các container.
+Cú pháp:
+		docker network <COMMAND>
+Lý do hữu ích:
+- Đảm bảo các container có thể giao tiếp an toàn và hiệu quả.
+- Loại bỏ sự phụ thuộc vào IP tĩnh.
+- Hỗ trợ mô hình microservices.
+Ví dụ:
+Tạo mạng:
+		docker network create app_network
+Kết nối container với mạng:
+		docker run --network app_network --name db postgres
+
+7. docker-compose
+Mô tả: Sử dụng để quản lý nhiều container với file cấu hình docker-compose.yml.
+Cú pháp:
+		docker-compose <COMMAND>
+Lý do hữu ích:
+- Giảm thiểu cấu hình phức tạp khi làm việc với nhiều container.
+- Tự động hóa việc build, chạy và kết nối container.
+Ví dụ:
+Khởi chạy:
+		docker-compose up -d
+Dừng:
+		docker-compose down
+
+8. docker exec
+Mô tả: Chạy lệnh trong container đang chạy.
+Cú pháp:
+		docker exec [OPTIONS] <container_name|ID> <command>
+Lý do hữu ích:
+- Cho phép truy cập container để kiểm tra hoặc sửa lỗi mà không cần khởi động lại.
+- Ví dụ: Mở shell trong container.
+Ví dụ:
+		docker exec -it webserver bash
+
+9. docker rm và docker rmi
+Mô tả:
+- docker rm: Xóa container.
+- docker rmi: Xóa image.
+Lý do hữu ích:
+- Giải phóng tài nguyên không cần thiết.
+- Dọn dẹp container và image cũ.
+Ví dụ:
+Xóa container:
+		docker rm my-container
+Xóa image:
+		docker rmi my-image:latest
+
+10. docker prune
+Mô tả: Xóa các tài nguyên Docker không sử dụng (container, image, volume, network).
+Cú pháp:
+		docker system prune
+Lý do hữu ích:
+- Giải phóng không gian lưu trữ.
+- Tự động hóa việc dọn dẹp hệ thống.
+Ví dụ:
+		docker system prune -a
+
+III. Mô hình MVC (Model-View-Controller) trong ATM.java được triển khai như sau:
+1. Class Account
+- Model chính lưu trữ thông tin tài khoản.
+- Quản lý các thuộc tính liên quan đến tài khoản như ID, mật khẩu, số tiền, và tên.
+- Thuộc tính:
+	accountID: Mã tài khoản (dạng số nguyên).
+	password: Mật khẩu của tài khoản.
+	money: Số tiền hiện có trong tài khoản.
+	name: Tên chủ tài khoản.
+- Phương thức:
+	Getter/Setter: Cung cấp khả năng truy cập và sửa đổi các thuộc tính.
+	checkLogin(int accountID, String password): Kiểm tra thông tin đăng nhập. Trả về true nếu accountID và password trùng với dữ liệu tài khoản, ngược lại trả về false.
+- Nhận xét:
+	Lớp này tuân thủ nguyên tắc Encapsulation bằng cách giữ các thuộc tính ở chế độ private và truy cập thông qua các phương thức public.
+	Có thể cải thiện bằng cách thêm các kiểm tra hợp lệ cho setMoney để ngăn số tiền âm.
+
+2. Class ATM
+- Lớp chính, khởi động chương trình.
+- Gọi phương thức từ lớp View để bắt đầu quy trình đăng nhập.
+- Phương thức main:
+	Gọi View.Login() để hiển thị giao diện đăng nhập.
+- Nhận xét:
+	Đơn giản, chỉ làm nhiệm vụ chạy chương trình.
+	Tuân thủ nguyên tắc Separation of Concerns (SoC) bằng cách không chứa logic chính trong lớp ATM.
+
+3. Class Controller
+- Trung gian giữa View và Model.
+- Xử lý logic kiểm tra thông tin đăng nhập bằng cách sử dụng dữ liệu từ lớp Model.
+- Phương thức check(int accountID, String password):
+	Lấy dữ liệu tài khoản từ lớp Model.
+	Gọi phương thức checkLogin của Account để kiểm tra thông tin đăng nhập.
+- Nhận xét:
+	Tách biệt rõ ràng logic xử lý và truy cập dữ liệu.
+	Dễ mở rộng khi thêm nhiều tính năng khác (ví dụ: rút tiền, nạp tiền).
+
+4. Class Model
+- Cung cấp dữ liệu tài khoản.
+- Mô phỏng vai trò của cơ sở dữ liệu trong chương trình.
+- Phương thức getAccount():
+	Tạo một đối tượng Account với thông tin tài khoản được khởi tạo sẵn.
+	Mô phỏng dữ liệu tài khoản từ cơ sở dữ liệu.
+- Nhận xét:
+	Lớp này chỉ có nhiệm vụ duy nhất là quản lý dữ liệu, phù hợp với thiết kế MVC.
+	Có thể mở rộng bằng cách tích hợp cơ sở dữ liệu thực sự để thay thế dữ liệu tĩnh.
+
+5. Class View
+- Xử lý giao diện người dùng.
+- Lấy đầu vào từ người dùng và hiển thị thông báo kết quả.
+- Phương thức Login():
+	Hiển thị giao diện đăng nhập.
+	Xử lý việc nhập ID và mật khẩu của người dùng.
+	Gọi Controller.check() để xác thực thông tin đăng nhập.
+	Hiển thị thông báo "success" hoặc "failed" tùy thuộc vào kết quả kiểm tra.
+- Nhận xét:
+	Phân tách rõ ràng giao diện (UI) khỏi logic.
+	Sử dụng vòng lặp để giới hạn số lần nhập sai, giúp tăng tính bảo mật.
+	Cần cải thiện việc kiểm tra đầu vào của ID và mật khẩu, vì hiện tại không có giới hạn độ dài hoặc ký tự hợp lệ.
+
+IV. Review và phân tích các bài TH Docker.
+1. TH4-3 (goal)
+- Dự án “goal” (NodeJS) là dự án xây dựng ứng dụng đặt mục tiêu đơn giản có thể thiết lập mục tiêu, quản lý mục tiêu cá nhân: cho phép người dùng tạo, sửa đổi và xóa các mục tiêu cá nhân; tương tác với người dùng: giao diện thân thiện, dễ sử dụng để tạo trải nghiệm người dùng tốt và hiển thị mục tiêu đã đặt ra. Sau khi hoàn thành ứng dụng, triển khai dự án trên Docker và cập nhật yêu cầu của đề bài.
+2. TH4-6 (feedback)
+- Dự án “feedback” (NodeJS) là dự án xây dựng ứng dụng nhận xét đơn giản có thể gửi phản hồi, đánh giá, hiển thị phản hồi và quản lý người dùng; tương tác với người dùng: giao diện thân thiện, dễ sử dụng để tạo trải nghiệm người dùng tốt. Triển khai dự án trên Docker và cập nhật chức năng yêu cầu.
+3. TH4-7 (network)
+- Dự án “network”(NodeJS) là dự án xây dựng ứng dụng kết nối internet đơn giản có thể xác thực người dùng, truy xuất dữ liệu từ internet, gửi và nhận thông tin qua mạng. Giao diện người dùng: giao diện thân thiện, dễ sử dụng để tạo trải nghiệm người dùng tốt. Triển khai dự án trên Docker và cập nhật chức năng yêu cầu.
+
+
+
+Microsoft Windows [Version 10.0.22631.4460]
+(c) Microsoft Corporation. All rights reserved.
+
+D:\CNPTPM\docker>docker image prune -a
+WARNING! This will remove all images without at least one container associated to them.
+Are you sure you want to continue? [y/N] y
+Deleted Images:
+untagged: network-image:latest
+deleted: sha256:6c076908ffd51b2d3adb0f70e33a98f6997c7e03d71cadcdcc6553d5543b9235
+
+Total reclaimed space: 0B
+
+D:\CNPTPM\docker>docker container prune
+WARNING! This will remove all stopped containers.
+Are you sure you want to continue? [y/N] y
+Total reclaimed space: 0B
+
+D:\CNPTPM\docker>cd database
+The system cannot find the path specified.
+
+D:\CNPTPM\docker>cd client-server
+
+D:\CNPTPM\docker\client-server>cd database      
+
+D:\CNPTPM\docker\client-server\database>
+
+D:\CNPTPM\docker\client-server\database>docker pull mongo
+Using default tag: latest
+latest: Pulling from library/mongo
+afad30e59d72: Pull complete
+2ab913c649fa: Pull complete
+142bff30356f: Pull complete
+ea6a78a8bfa5: Pull complete
+e87de320d14a: Pull complete
+e8fb995504bd: Pull complete
+edbe36f78898: Pull complete
+1f774f57f04f: Pull complete
+Digest: sha256:c165af1a407eefce644877bf5a59ba3d9ca762e62b4f1723c919dc08dc32f4d0
+Status: Downloaded newer image for mongo:latest
+docker.io/library/mongo:latest
+
+What's next:
+    View a summary of image vulnerabilities and recommendations → docker scout quickview mongo
+
+D:\CNPTPM\docker\client-server\database>
+
+
+D:\CNPTPM\docker\client-server\database>docker run -d -p 27017:27017 --rm --name db-app mongo
+abee7c8fd6402086c96c3cd868e97fab5ef8fb0f5e6a978e57e7ba70e7a366a5
+
+
+D:\CNPTPM\docker\client-server\database>docker ps
+CONTAINER ID   IMAGE     COMMAND                  CREATED          STATUS          PORTS                   
+   NAMES
+abee7c8fd640   mongo     "docker-entrypoint.s…"   27 seconds ago   Up 26 seconds   0.0.0.0:27017->27017/tcp   db-app
+
+
+
+Microsoft Windows [Version 10.0.22631.4460]
+(c) Microsoft Corporation. All rights reserved.
+
+D:\CNPTPM\docker>cd client-server\backend
+
+D:\CNPTPM\docker\client-server\backend>npm i
+
+added 134 packages, and audited 135 packages in 33s
+
+18 packages are looking for funding
+  run `npm fund` for details
+
+3 high severity vulnerabilities
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
+
+
+D:\CNPTPM\docker\client-server\backend>node app.js
+FAILED TO CONNECT TO MONGODB
+MongooseServerSelectionError: getaddrinfo ENOTFOUND mongodb
+    at Connection.openUri (D:\CNPTPM\docker\client-server\backend\node_modules\mongoose\lib\connection.js:847:32)
+    at D:\CNPTPM\docker\client-server\backend\node_modules\mongoose\lib\index.js:351:10
+    at promiseOrCallback (D:\CNPTPM\docker\client-server\backend\node_modules\mongoose\lib\helpers\promiseOrCallback.js:10:12)
+    at Mongoose._promiseOrCallback (D:\CNPTPM\docker\client-server\backend\node_modules\mongoose\lib\index.js:1149:10)
+    at Mongoose.connect (D:\CNPTPM\docker\client-server\backend\node_modules\mongoose\lib\index.js:350:20) 
+    at Object.<anonymous> (D:\CNPTPM\docker\client-server\backend\app.js:86:10)
+    at Module._compile (node:internal/modules/cjs/loader:1469:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1548:10)
+    at Module.load (node:internal/modules/cjs/loader:1288:32)
+    at Module._load (node:internal/modules/cjs/loader:1104:12)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:174:12)
+    at node:internal/main/run_main_module:28:49 {
+  reason: TopologyDescription {
+    type: 'Single',
+    setName: null,
+    maxSetVersion: null,
+    maxElectionId: null,
+    servers: Map(1) { 'mongodb:27017' => [ServerDescription] },
+    stale: false,
+    compatible: true,
+    compatibilityError: null,
+    logicalSessionTimeoutMinutes: null,
+    heartbeatFrequencyMS: 10000,
+    localThresholdMS: 15,
+    commonWireVersion: null
+  }
+}
+
+
+
+D:\CNPTPM\docker\client-server\backend>node app.js        
+CONNECTED TO MONGODB!!
+node:events:497
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EACCES: permission denied 0.0.0.0:80
+    at Server.setupListenHandle [as _listen2] (node:net:1882:21)
+    at listenInCluster (node:net:1961:12)
+    at Server.listen (node:net:2063:7)
+    at Function.listen (D:\CNPTPM\docker\client-server\backend\node_modules\express\lib\application.js:635:24)
+    at D:\CNPTPM\docker\client-server\backend\app.js:98:11
+    at D:\CNPTPM\docker\client-server\backend\node_modules\mongoose\lib\helpers\promiseOrCallback.js:25:16 
+    at D:\CNPTPM\docker\client-server\backend\node_modules\mongoose\lib\index.js:355:14
+    at D:\CNPTPM\docker\client-server\backend\node_modules\mongoose\lib\connection.js:874:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:1940:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+  code: 'EACCES',
+  errno: -4092,
+  syscall: 'listen',
+  address: '0.0.0.0',
+  port: 80
+}
+
+Node.js v20.17.0
+
+
+Microsoft Windows [Version 10.0.22631.4460]
+(c) Microsoft Corporation. All rights reserved.
+
+C:\Windows\System32>netstat -ano | findstr :80
+  TCP    0.0.0.0:80             0.0.0.0:0              LISTENING       4
+  TCP    [::]:80                [::]:0                 LISTENING       4
+  TCP    [2405:4800:629a:2e70:41d6:ed4f:69f9:7bc6]:51441  [2404:6800:4005:80a::200a]:443  TIME_WAIT       0
+  TCP    [2405:4800:629a:2e70:41d6:ed4f:69f9:7bc6]:51449  [2603:1047:1:190::80]:443  ESTABLISHED     12084
+
+C:\Windows\System32>netstat -ano | findstr :80
+  TCP    0.0.0.0:80             0.0.0.0:0              LISTENING       4
+  TCP    [::]:80                [::]:0                 LISTENING       4
+  TCP    [2405:4800:629a:2e70:41d6:ed4f:69f9:7bc6]:51441  [2404:6800:4005:80a::200a]:443  TIME_WAIT       0
+  TCP    [2405:4800:629a:2e70:41d6:ed4f:69f9:7bc6]:51449  [2603:1047:1:190::80]:443  ESTABLISHED     12084
+  TCP    [2405:4800:629a:2e70:41d6:ed4f:69f9:7bc6]:51479  [2404:6800:4005:804::200a]:443  TIME_WAIT       0
+  UDP    [::]:51737             [2404:6800:4005:804::200a]:443                  12668
+
+C:\Windows\System32>net stop w3svc
+The World Wide Web Publishing Service service is stopping.
+The World Wide Web Publishing Service service was stopped successfully.
+
+
+D:\CNPTPM\docker\client-server\backend>node app.js
+CONNECTED TO MONGODB!!
+TRYING TO FETCH GOALS
+FETCHED GOALS
+
+
+Microsoft Windows [Version 10.0.22631.4460]
+(c) Microsoft Corporation. All rights reserved.
+
+D:\CNPTPM\docker>cd client-server\frontend
+
+D:\CNPTPM\docker\client-server\frontend>npm i
+npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm warn deprecated @babel/plugin-proposal-class-properties@7.18.6: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-class-properties instead.
+npm warn deprecated @babel/plugin-proposal-numeric-separator@7.18.6: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-numeric-separator instead.
+npm warn deprecated @babel/plugin-proposal-private-methods@7.18.6: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-private-methods instead.
+npm warn deprecated @babel/plugin-proposal-nullish-coalescing-operator@7.18.6: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-nullish-coalescing-operator instead.
+npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+npm warn deprecated stable@0.1.8: Modern JS already guarantees Array#sort() is a stable sort, so this library is deprecated. See the compatibility table on MDN: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#browser_compatibility
+npm warn deprecated @babel/plugin-proposal-optional-chaining@7.21.0: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-optional-chaining instead.
+npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm warn deprecated rollup-plugin-terser@7.0.2: This package has been deprecated and is no longer maintained. Please use @rollup/plugin-terser
+npm warn deprecated abab@2.0.6: Use your platform's native atob() and btoa() methods instead
+npm warn deprecated q@1.5.1: You or someone you depend on is using Q, the JavaScript Promise library that gave JavaScript developers strong feelings about promises. They can almost certainly migrate to the native JavaScript promise now. Thank you literally everyone for joining me in this bet against the odds. Be excellent to each other.
+npm warn deprecated
+npm warn deprecated (For a CapTP with native promises, see @endo/eventual-send and @endo/captp)
+npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+npm warn deprecated domexception@2.0.1: Use your platform's native DOMException instead
+npm warn deprecated sourcemap-codec@1.4.8: Please use @jridgewell/sourcemap-codec instead
+npm warn deprecated w3c-hr-time@1.0.2: Use your platform's native performance.now() and performance.timeOrigin.
+npm warn deprecated workbox-cacheable-response@6.6.0: workbox-background-sync@6.6.0
+npm warn deprecated workbox-google-analytics@6.6.0: It is not compatible with newer versions of GA starting with v4, as long as you are using GAv3 it should be ok, but the package is not longer being maintained    
+npm warn deprecated svgo@1.3.2: This SVGO version is no longer supported. Upgrade to v2.x.x.
+npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+
+added 1460 packages, and audited 1461 packages in 2m
+
+263 packages are looking for funding
+  run `npm fund` for details
+
+8 vulnerabilities (2 moderate, 6 high)
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+
+D:\CNPTPM\docker\client-server\frontend>npm start
+
+Starting the development server...
+
+One of your dependencies, babel-preset-react-app, is importing the
+"@babel/plugin-proposal-private-property-in-object" package without
+declaring it in its dependencies. This is currently working because
+"@babel/plugin-proposal-private-property-in-object" is already in your
+Compiled successfully!
+
+You can now view docker-frontend in the browser.
+
+  Local:            http://localhost:3000
+  On Your Network:  http://192.168.1.238:3000
+
+Note that the development build is not optimized.
+To create a production build, use npm run build.
+
+webpack compiled successfully
+
+
+Microsoft Windows [Version 10.0.22631.4460]
+(c) Microsoft Corporation. All rights reserved.
+
+D:\CNPTPM\docker>cd client-server\backend
+
+D:\CNPTPM\docker\client-server\backend>docker build -t backend-image .
+[+] Building 29.7s (10/10) FINISHED                                                   docker:desktop-linux
+ => [internal] load build definition from Dockerfile                                                  0.1s
+ => => transferring dockerfile: 198B                                                                  0.0s
+ => [internal] load metadata for docker.io/library/node:latest                                        3.8s
+ => [internal] load .dockerignore                                                                     0.1s
+ => => transferring context: 68B                                                                      0.0s 
+ => [1/5] FROM docker.io/library/node:latest@sha256:a2fea8b0b74b6e828caa6d83f4b2a0dcb2eb1ff90f30205c  7.7s
+ => => resolve docker.io/library/node:latest@sha256:a2fea8b0b74b6e828caa6d83f4b2a0dcb2eb1ff90f30205c  0.1s 
+ => => sha256:e15446acc41f6b6b5f118402b9cf703e23f5a8bf475336746728cd5f4ae46bda 6.52kB / 6.52kB        0.0s
+ => => sha256:a2fea8b0b74b6e828caa6d83f4b2a0dcb2eb1ff90f30205c32f7bd36ddf976c4 6.41kB / 6.41kB        0.0s 
+ => => sha256:f5d08c5848bcd66a49fd521addedd1e2e6abeef597e3aa51a5c0a6cb340c3906 2.49kB / 2.49kB        0.0s 
+ => => sha256:6dcf3fec5aa5c7a320b7556a88bfeb556e55d2dcf0d092f350acf52867a3f865 3.32kB / 3.32kB        2.4s 
+ => => sha256:0e17f60cf310e3ad9039dd58b6c81ae1c19874858f8a4bb9d23ddfcd38862621 56.83MB / 56.83MB      3.8s 
+ => => sha256:31f41931af7c0c1212d2f9446ff8557f5c0551d9eb27387f5c5b998bd00af46b 1.25MB / 1.25MB        0.6s 
+ => => sha256:c5be1c685570bb15b8d3eea2ef62ff9894be75c3ebfbb8d61807bf04c6134876 445B / 445B            1.5s 
+ => => extracting sha256:6dcf3fec5aa5c7a320b7556a88bfeb556e55d2dcf0d092f350acf52867a3f865             0.0s 
+ => => extracting sha256:0e17f60cf310e3ad9039dd58b6c81ae1c19874858f8a4bb9d23ddfcd38862621             3.1s 
+ => => extracting sha256:31f41931af7c0c1212d2f9446ff8557f5c0551d9eb27387f5c5b998bd00af46b             0.1s 
+ => => extracting sha256:c5be1c685570bb15b8d3eea2ef62ff9894be75c3ebfbb8d61807bf04c6134876             0.0s 
+ => [internal] load build context                                                                     0.2s 
+ => => transferring context: 66.17kB                                                                  0.0s 
+ => [2/5] WORKDIR /app                                                                                7.4s 
+ => [3/5] COPY package.json .                                                                         0.2s 
+ => [4/5] RUN npm install                                                                             9.4s 
+ => [5/5] COPY . .                                                                                    0.2s 
+ => exporting to image                                                                                0.5s 
+ => => exporting layers                                                                               0.4s 
+ => => writing image sha256:cf8a9c8653173607095dc284274e0156daae40c9e76d0583ef87e46987f848e3          0.0s 
+ => => naming to docker.io/library/backend-image                                                      0.1s 
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/nh8t46r22ljdqw2zjzc6ralt8 
+
+ 1 warning found (use docker --debug to expand):
+ - SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ENV "MONGODB_PASSWORD") (line 14)
+
+What's next:
+    View a summary of image vulnerabilities and recommendations → docker scout quickview
+
+D:\CNPTPM\docker\client-server\backend>docker run -d -p 80:80 --rm --name backend-app backend-image
+6d3774e978fcdf3350b808ffd570b45afc469461a9424872a3a8a24e65fbafaa
+
+D:\CNPTPM\docker\client-server\backend>
+
+D:\CNPTPM\docker\client-server\backend>docker ps
+CONTAINER ID   IMAGE           COMMAND                  CREATED          STATUS          PORTS                      NAMES
+6d3774e978fc   backend-image   "docker-entrypoint.s…"   5 minutes ago    Up 5 minutes    0.0.0.0:80->80/tcp         backend-app
+abee7c8fd640   mongo           "docker-entrypoint.s…"   46 minutes ago   Up 46 minutes   0.0.0.0:27017->27017/tcp   db-app
+
+
+Microsoft Windows [Version 10.0.22631.4460]
+(c) Microsoft Corporation. All rights reserved.
+
+D:\CNPTPM\docker>client-server\frontend 
+'client-server\frontend' is not recognized as an internal or external command,
+operable program or batch file.
+
+D:\CNPTPM\docker>cd client-server\frontend 
+
+D:\CNPTPM\docker\client-server\frontend>docker build -t frontend-image .
+[+] Building 74.0s (10/10) FINISHED                                                   docker:desktop-linux
+ => [internal] load build definition from Dockerfile                                                  0.1s
+ => => transferring dockerfile: 145B                                                                  0.0s 
+ => [internal] load metadata for docker.io/library/node:latest                                        1.1s 
+ => [internal] load .dockerignore                                                                     0.1s
+ => => transferring context: 68B                                                                      0.0s 
+ => [1/5] FROM docker.io/library/node:latest@sha256:a2fea8b0b74b6e828caa6d83f4b2a0dcb2eb1ff90f30205c  0.0s
+ => [internal] load build context                                                                     0.3s 
+ => => transferring context: 754.34kB                                                                 0.2s
+ => CACHED [2/5] WORKDIR /app                                                                         0.0s 
+ => [3/5] COPY package.json .                                                                         0.1s 
+ => [4/5] RUN npm install                                                                            66.0s 
+ => [5/5] COPY . .                                                                                    0.2s 
+ => exporting to image                                                                                5.7s 
+ => => exporting layers                                                                               5.6s 
+ => => writing image sha256:4752bbeb1528b3a762486b1c1b0df709c80db9fb6eddbd2a1a3b8d1cf42fbd7b          0.0s 
+ => => naming to docker.io/library/frontend-image                                                     0.0s 
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/lqh2ally5h0wa06jsvl6vxclm 
+
+What's next:
+
+D:\CNPTPM\docker\client-server\frontend>docker run -it -p 3000:3000 --rm --name frontend-app frontend-image
+docker: Error response from daemon: Ports are not available: exposing port TCP 0.0.0.0:3000 -> 0.0.0.0:0: listen tcp4 0.0.0.0:3000: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted.
+
+D:\CNPTPM\docker\client-server\frontend>docker run -it -p 3000:3000 --rm --name frontend-app frontend-image
+docker: Error response from daemon: Ports are not available: exposing port TCP 0.0.0.0:3000 -> 0.0.0.0:0: listen tcp4 0.0.0.0:3000: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted.
+
+D:\CNPTPM\docker\client-server\frontend>
+D:\CNPTPM\docker\client-server\frontend>
+
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Install the latest PowerShell for new features and improvements! https://aka.ms/PSWindows
+
+PS C:\Users\LinhChan> netstat -ano | Select-String ":3000"
+
+  TCP    0.0.0.0:3000           0.0.0.0:0              LISTENING       744
+  TCP    127.0.0.1:3000         127.0.0.1:51509        ESTABLISHED     744
+  TCP    127.0.0.1:51509        127.0.0.1:3000         ESTABLISHED     12668
+  TCP    [2405:4800:629a:2e70:41d6:ed4f:69f9:7bc6]:51804  [2600:9000:269c:3000:1c:aabc:1300:93a1]:443  ESTABLISHED
+15692
+
+
+PS C:\Users\LinhChan> taskkill /PID 744 /F
+SUCCESS: The process with PID 744 has been terminated.
+PS C:\Users\LinhChan>
+
+
+D:\CNPTPM\docker\client-server\frontend>docker run -it -p 3000:3000 --rm --name frontend-app frontend-image
+
+Compiled successfully!
+
+You can now view docker-frontend in the browser.
+
+  Local:            http://localhost:3000
+  On Your Network:  http://172.17.0.4:3000
+
+Note that the development build is not optimized.
+To create a production build, use npm run build.
+
+webpack compiled successfully
+
+
+D:\CNPTPM\docker\client-server\backend>docker ps
+CONTAINER ID   IMAGE            COMMAND                  CREATED              STATUS              PORTS                      NAMES
+177557a47046   frontend-image   "docker-entrypoint.s…"   About a minute ago   Up About a minute   0.0.0.0:3000->3000/tcp     frontend-app        
+6d3774e978fc   backend-image    "docker-entrypoint.s…"   18 minutes ago       Up 18 minutes       0.0.0.0:80->80/tcp         backend-app
+abee7c8fd640   mongo            "docker-entrypoint.s…"   59 minutes ago       Up 59 minutes       0.0.0.0:27017->27017/tcp   db-app
+
+
+
+Microsoft Windows [Version 10.0.22631.4460]
+(c) Microsoft Corporation. All rights reserved.
+
+D:\CNPTPM\docker>cd client-server\backend
+
+D:\CNPTPM\docker\client-server\backend>docker logs db-app
+{"t":{"$date":"2024-11-24T10:14:26.684+00:00"},"s":"I",  "c":"CONTROL",  "id":23285,   "ctx":"main","msg":"Automatically disabling TLS 1.0, to force-enable TLS 1.0 specify --sslDisabledProtocols 'none'"}
+{"t":{"$date":"2024-11-24T10:14:26.684+00:00"},"s":"I",  "c":"CONTROL",  "id":5945603, "ctx":"main","msg":"Multi threading initialized"}
+{"t":{"$date":"2024-11-24T10:14:26.685+00:00"},"s":"I",  "c":"NETWORK",  "id":4648601, "ctx":"main","msg":"Implicit TCP FastOpen unavailable. If TCP FastOpen is required, set at least one of the related parameters","attr":{"relatedParameters":["tcpFastOpenServer","tcpFastOpenClient","tcpFastOpenQueueSize"]}}
+{"t":{"$date":"2024-11-24T10:14:26.687+00:00"},"s":"I",  "c":"NETWORK",  "id":4915701, "ctx":"main","msg":"Initialized wire specification","attr":{"spec":{"incomingExternalClient":{"minWireVersion":0,"maxWireVersion":25},"incomingInternalClient":{"minWireVersion":0,"maxWireVersion":25},"outgoing":{"minWireVersion":6,"maxWireVersion":25},"isInternalClient":true}}}
+{"t":{"$date":"2024-11-24T10:14:26.687+00:00"},"s":"I",  "c":"TENANT_M", "id":7091600, "ctx":"main","msg":"Starting TenantMigrationAccessBlockerRegistry"}
+{"t":{"$date":"2024-11-24T10:14:26.687+00:00"},"s":"I",  "c":"CONTROL",  "id":4615611, "ctx":"initandlisten","msg":"MongoDB starting","attr":{"pid":1,"port":27017,"dbPath":"/data/db","architecture":"64-bit","host":"abee7c8fd640"}}
+{"t":{"$date":"2024-11-24T10:14:26.687+00:00"},"s":"I",  "c":"CONTROL",  "id":23403,   "ctx":"initandlisten","msg":"Build Info","attr":{"buildInfo":{"version":"8.0.3","gitVersion":"89d97f2744a2b9851ddfb51bdf22f687562d9b06","openSSLVersion":"OpenSSL 3.0.13 30 Jan 2024","modules":[],"allocator":"tcmalloc-google","environment":{"distmod":"ubuntu2404","distarch":"x86_64","target_arch":"x86_64"}}}}
+{"t":{"$date":"2024-11-24T10:14:26.687+00:00"},"s":"I",  "c":"CONTROL",  "id":51765,   "ctx":"initandlisten","msg":"Operating System","attr":{"os":{"name":"Ubuntu","version":"24.04"}}}
+{"t":{"$date":"2024-11-24T10:14:26.687+00:00"},"s":"I",  "c":"CONTROL",  "id":21951,   "ctx":"initandlisten","msg":"Options set by command line","attr":{"options":{"net":{"bindIp":"*"}}}}
+{"t":{"$date":"2024-11-24T10:14:26.690+00:00"},"s":"I",  "c":"STORAGE",  "id":22297,   "ctx":"initandlisten","msg":"Using the XFS filesystem is strongly recommended with the WiredTiger storage engine. See http://dochub.mongodb.org/core/prodnotes-filesystem","tags":["startupWarnings"]}     
+{"t":{"$date":"2024-11-24T10:14:26.691+00:00"},"s":"I",  "c":"STORAGE",  "id":22315,   "ctx":"initandlisten","msg":"Opening WiredTiger","attr":{"config":"create,cache_size=1367M,session_max=33000,eviction=(threads_min=4,threads_max=4),config_base=false,statistics=(fast),log=(enabled=true,remove=true,path=journal,compressor=snappy),builtin_extension_config=(zstd=(compression_level=6)),file_manager=(close_idle_time=600,close_scan_interval=10,close_handle_minimum=2000),statistics_log=(wait=0),json_output=(error,message),verbose=[recovery_progress:1,checkpoint_progress:1,compact_progress:1,backup:0,checkpoint:0,compact:0,evict:0,history_store:0,recovery:0,rts:0,salvage:0,tiered:0,timestamp:0,transaction:0,verify:0,log:0],prefetch=(available=true,default=false),"}}
+{"t":{"$date":"2024-11-24T10:14:27.335+00:00"},"s":"I",  "c":"WTRECOV",  "id":22430,   "ctx":"initandlisten","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732443267,"ts_usec":335556,"thread":"1:0x7f08e27c1680","session_name":"txn-recover","category":"WT_VERB_RECOVERY_PROGRESS","category_id":34,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"recovery log replay has successfully finished and ran for 1 milliseconds"}}}
+{"t":{"$date":"2024-11-24T10:14:27.335+00:00"},"s":"I",  "c":"WTRECOV",  "id":22430,   "ctx":"initandlisten","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732443267,"ts_usec":335655,"thread":"1:0x7f08e27c1680","session_name":"txn-recover","category":"WT_VERB_RECOVERY_PROGRESS","category_id":34,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"Set global recovery timestamp: (0, 0)"}}}
+{"t":{"$date":"2024-11-24T10:14:27.335+00:00"},"s":"I",  "c":"WTRECOV",  "id":22430,   "ctx":"initandlisten","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732443267,"ts_usec":335671,"thread":"1:0x7f08e27c1680","session_name":"txn-recover","category":"WT_VERB_RECOVERY_PROGRESS","category_id":34,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"Set global oldest timestamp: (0, 0)"}}}
+{"t":{"$date":"2024-11-24T10:14:27.335+00:00"},"s":"I",  "c":"WTRECOV",  "id":22430,   "ctx":"initandlisten","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732443267,"ts_usec":335691,"thread":"1:0x7f08e27c1680","session_name":"txn-recover","category":"WT_VERB_RECOVERY_PROGRESS","category_id":34,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"recovery was completed successfully and took 1ms, including 1ms for the log replay, 0ms for the rollback to stable, and 0ms for the checkpoint."}}}
+{"t":{"$date":"2024-11-24T10:14:27.372+00:00"},"s":"I",  "c":"STORAGE",  "id":4795906, "ctx":"initandlisten","msg":"WiredTiger opened","attr":{"durationMillis":681}}
+{"t":{"$date":"2024-11-24T10:14:27.373+00:00"},"s":"I",  "c":"RECOVERY", "id":23987,   "ctx":"initandlisten","msg":"WiredTiger recoveryTimestamp","attr":{"recoveryTimestamp":{"$timestamp":{"t":0,"i":0}}}}
+{"t":{"$date":"2024-11-24T10:14:27.446+00:00"},"s":"W",  "c":"CONTROL",  "id":22120,   "ctx":"initandlisten","msg":"Access control is not enabled for the database. Read and write access to data and configuration is unrestricted","tags":["startupWarnings"]}
+{"t":{"$date":"2024-11-24T10:14:27.446+00:00"},"s":"W",  "c":"CONTROL",  "id":9068900, "ctx":"initandlisten","msg":"For customers running the current memory allocator, we suggest changing the contents of the following sysfsFile","attr":{"allocator":"tcmalloc-google","sysfsFile":"/sys/kernel/mm/transparent_hugepage/defrag","currentValue":"madvise","desiredValue":"defer+madvise"},"tags":["startupWarnings"]}
+{"t":{"$date":"2024-11-24T10:14:27.446+00:00"},"s":"W",  "c":"CONTROL",  "id":8640302, "ctx":"initandlisten","msg":"We suggest setting the contents of sysfsFile to 0.","attr":{"sysfsFile":"/sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_none","currentValue":511},"tags":["startupWarnings"]}
+{"t":{"$date":"2024-11-24T10:14:27.446+00:00"},"s":"W",  "c":"CONTROL",  "id":8718500, "ctx":"initandlisten","msg":"Your system has glibc support for rseq built in, which is not yet supported by tcmalloc-google and has critical performance implications. Please set the environment variable GLIBC_TUNABLES=glibc.pthread.rseq=0","tags":["startupWarnings"]}
+{"t":{"$date":"2024-11-24T10:14:27.446+00:00"},"s":"W",  "c":"NETWORK",  "id":5123300, "ctx":"initandlisten","msg":"vm.max_map_count is too low","attr":{"currentValue":262144,"recommendedMinimum":1677720,"maxConns":838860},"tags":["startupWarnings"]}
+{"t":{"$date":"2024-11-24T10:14:27.446+00:00"},"s":"W",  "c":"CONTROL",  "id":8386700, "ctx":"initandlisten","msg":"We suggest setting swappiness to 0 or 1, as swapping can cause performance problems.","attr":{"sysfsFile":"/proc/sys/vm/swappiness","currentValue":60},"tags":["startupWarnings"]}
+{"t":{"$date":"2024-11-24T10:14:27.447+00:00"},"s":"I",  "c":"STORAGE",  "id":20320,   "ctx":"initandlisten","msg":"createCollection","attr":{"namespace":"admin.system.version","uuidDisposition":"provided","uuid":{"uuid":{"$uuid":"93f11a23-e019-4557-bc3f-d68e36761f2e"}},"options":{"uuid":{"$uuid":"93f11a23-e019-4557-bc3f-d68e36761f2e"}}}}
+{"t":{"$date":"2024-11-24T10:14:27.483+00:00"},"s":"I",  "c":"INDEX",    "id":20345,   "ctx":"initandlisten","msg":"Index build: done building","attr":{"buildUUID":null,"collectionUUID":{"uuid":{"$uuid":"93f11a23-e019-4557-bc3f-d68e36761f2e"}},"namespace":"admin.system.version","index":"_id_","ident":"index-1-8595770077976324460","collectionIdent":"collection-0-8595770077976324460","commitTimestamp":null}}
+{"t":{"$date":"2024-11-24T10:14:27.484+00:00"},"s":"I",  "c":"REPL",     "id":20459,   "ctx":"initandlisten","msg":"Setting featureCompatibilityVersion","attr":{"newVersion":"8.0"}}
+{"t":{"$date":"2024-11-24T10:14:27.484+00:00"},"s":"I",  "c":"REPL",     "id":5853300, "ctx":"initandlisten","msg":"current featureCompatibilityVersion value","attr":{"featureCompatibilityVersion":"8.0","context":"setFCV"}}
+{"t":{"$date":"2024-11-24T10:14:27.484+00:00"},"s":"I",  "c":"NETWORK",  "id":4915702, "ctx":"initandlisten","msg":"Updated wire specification","attr":{"oldSpec":{"incomingExternalClient":{"minWireVersion":0,"maxWireVersion":25},"incomingInternalClient":{"minWireVersion":0,"maxWireVersion":25},"outgoing":{"minWireVersion":6,"maxWireVersion":25},"isInternalClient":true},"newSpec":{"incomingExternalClient":{"minWireVersion":0,"maxWireVersion":25},"incomingInternalClient":{"minWireVersion":25,"maxWireVersion":25},"outgoing":{"minWireVersion":25,"maxWireVersion":25},"isInternalClient":true}}}
+{"t":{"$date":"2024-11-24T10:14:27.484+00:00"},"s":"I",  "c":"NETWORK",  "id":4915702, "ctx":"initandlisten","msg":"Updated wire specification","attr":{"oldSpec":{"incomingExternalClient":{"minWireVersion":0,"maxWireVersion":25},"incomingInternalClient":{"minWireVersion":25,"maxWireVersion":25},"outgoing":{"minWireVersion":25,"maxWireVersion":25},"isInternalClient":true},"newSpec":{"incomingExternalClient":{"minWireVersion":0,"maxWireVersion":25},"incomingInternalClient":{"minWireVersion":25,"maxWireVersion":25},"outgoing":{"minWireVersion":25,"maxWireVersion":25},"isInternalClient":true}}}
+{"t":{"$date":"2024-11-24T10:14:27.484+00:00"},"s":"I",  "c":"REPL",     "id":5853300, "ctx":"initandlisten","msg":"current featureCompatibilityVersion value","attr":{"featureCompatibilityVersion":"8.0","context":"startup"}}
+{"t":{"$date":"2024-11-24T10:14:27.484+00:00"},"s":"I",  "c":"STORAGE",  "id":5071100, "ctx":"initandlisten","msg":"Clearing temp directory"}    
+{"t":{"$date":"2024-11-24T10:14:27.484+00:00"},"s":"I",  "c":"CONTROL",  "id":6608200, "ctx":"initandlisten","msg":"Initializing cluster server parameters from disk"}
+{"t":{"$date":"2024-11-24T10:14:27.484+00:00"},"s":"I",  "c":"CONTROL",  "id":20536,   "ctx":"initandlisten","msg":"Flow Control is enabled on this deployment"}
+{"t":{"$date":"2024-11-24T10:14:27.491+00:00"},"s":"I",  "c":"FTDC",     "id":20625,   "ctx":"initandlisten","msg":"Initializing full-time diagnostic data capture","attr":{"dataDirectory":"/data/db/diagnostic.data"}}
+{"t":{"$date":"2024-11-24T10:14:27.492+00:00"},"s":"I",  "c":"STORAGE",  "id":20320,   "ctx":"initandlisten","msg":"createCollection","attr":{"namespace":"local.startup_log","uuidDisposition":"generated","uuid":{"uuid":{"$uuid":"790ece07-d1e0-433e-afe5-29e10db9dfb4"}},"options":{"capped":true,"size":10485760}}}
+{"t":{"$date":"2024-11-24T10:14:27.528+00:00"},"s":"I",  "c":"INDEX",    "id":20345,   "ctx":"initandlisten","msg":"Index build: done building","attr":{"buildUUID":null,"collectionUUID":{"uuid":{"$uuid":"790ece07-d1e0-433e-afe5-29e10db9dfb4"}},"namespace":"local.startup_log","index":"_id_","ident":"index-3-8595770077976324460","collectionIdent":"collection-2-8595770077976324460","commitTimestamp":null}}
+{"t":{"$date":"2024-11-24T10:14:27.528+00:00"},"s":"I",  "c":"REPL",     "id":6015317, "ctx":"initandlisten","msg":"Setting new configuration state","attr":{"newState":"ConfigReplicationDisabled","oldState":"ConfigPreStart"}}
+{"t":{"$date":"2024-11-24T10:14:27.528+00:00"},"s":"I",  "c":"STORAGE",  "id":22262,   "ctx":"initandlisten","msg":"Timestamp monitor starting"} 
+{"t":{"$date":"2024-11-24T10:14:27.528+00:00"},"s":"I",  "c":"STORAGE",  "id":7333401, "ctx":"initandlisten","msg":"Starting the DiskSpaceMonitor"}
+{"t":{"$date":"2024-11-24T10:14:27.529+00:00"},"s":"I",  "c":"NETWORK",  "id":23015,   "ctx":"listener","msg":"Listening on","attr":{"address":"/tmp/mongodb-27017.sock"}}
+{"t":{"$date":"2024-11-24T10:14:27.529+00:00"},"s":"I",  "c":"NETWORK",  "id":23015,   "ctx":"listener","msg":"Listening on","attr":{"address":"0.0.0.0:27017"}}
+{"t":{"$date":"2024-11-24T10:14:27.529+00:00"},"s":"I",  "c":"NETWORK",  "id":23016,   "ctx":"listener","msg":"Waiting for connections","attr":{"port":27017,"ssl":"off"}}
+{"t":{"$date":"2024-11-24T10:14:27.530+00:00"},"s":"I",  "c":"CONTROL",  "id":8423403, "ctx":"initandlisten","msg":"mongod startup complete","attr":{"Summary of time elapsed":{"Startup from clean shutdown?":true,"Statistics":{"Set up periodic runner":"0 ms","Set up online certificate status protocol manager":"0 ms","Transport layer setup":"0 ms","Run initial syncer crash recovery":"0 ms","Create storage engine lock file in the data directory":"0 ms","Get metadata describing storage engine":"0 ms","Create storage engine":"737 ms","Write current PID to file":"0 ms","Write a new metadata for storage engine":"10 ms","Initialize FCV before rebuilding indexes":"0 ms","Drop abandoned idents and get back indexes that need to be rebuilt or builds that need to be restarted":"0 ms","Rebuild indexes for collections":"0 ms","Load cluster parameters from disk for a standalone":"0 ms","Build user and roles graph":"0 ms","Set up the background thread pool responsible for waiting for opTimes to be majority committed":"0 ms","Start up the replication coordinator":"0 ms","Ensure the change stream collections on startup contain consistent data":"0 ms","Write startup options to the audit log":"0 ms","Start transport layer":"0 ms","_initAndListen total elapsed time":"842 ms"}}}}
+{"t":{"$date":"2024-11-24T10:14:27.531+00:00"},"s":"I",  "c":"CONTROL",  "id":20712,   "ctx":"LogicalSessionCacheReap","msg":"Sessions collection is not set up; waiting until next sessions reap interval","attr":{"error":"NamespaceNotFound: config.system.sessions does not exist"}}
+{"t":{"$date":"2024-11-24T10:14:27.531+00:00"},"s":"I",  "c":"STORAGE",  "id":20320,   "ctx":"LogicalSessionCacheRefresh","msg":"createCollection","attr":{"namespace":"config.system.sessions","uuidDisposition":"generated","uuid":{"uuid":{"$uuid":"55960440-4c1c-4dc6-960d-9dcb19a7077f"}},"options":{}}}
+{"t":{"$date":"2024-11-24T10:14:27.584+00:00"},"s":"I",  "c":"INDEX",    "id":20345,   "ctx":"LogicalSessionCacheRefresh","msg":"Index build: done building","attr":{"buildUUID":null,"collectionUUID":{"uuid":{"$uuid":"55960440-4c1c-4dc6-960d-9dcb19a7077f"}},"namespace":"config.system.sessions","index":"_id_","ident":"index-5-8595770077976324460","collectionIdent":"collection-4-8595770077976324460","commitTimestamp":null}}
+{"t":{"$date":"2024-11-24T10:14:27.584+00:00"},"s":"I",  "c":"INDEX",    "id":20345,   "ctx":"LogicalSessionCacheRefresh","msg":"Index build: done building","attr":{"buildUUID":null,"collectionUUID":{"uuid":{"$uuid":"55960440-4c1c-4dc6-960d-9dcb19a7077f"}},"namespace":"config.system.sessions","index":"lsidTTLIndex","ident":"index-6-8595770077976324460","collectionIdent":"collection-4-8595770077976324460","commitTimestamp":null}}   
+{"t":{"$date":"2024-11-24T10:14:28.020+00:00"},"s":"W",  "c":"CONTROL",  "id":636300,  "ctx":"ftdc","msg":"Use of deprecated server parameter name","attr":{"deprecatedName":"internalQueryCacheSize","canonicalName":"internalQueryCacheMaxEntriesPerCollection"}}
+{"t":{"$date":"2024-11-24T10:14:28.021+00:00"},"s":"W",  "c":"CONTROL",  "id":636300,  "ctx":"ftdc","msg":"Use of deprecated server parameter name","attr":{"deprecatedName":"oplogSamplingLogIntervalSeconds","canonicalName":"collectionSamplingLogIntervalSeconds"}}
+{"t":{"$date":"2024-11-24T10:14:28.021+00:00"},"s":"W",  "c":"NETWORK",  "id":23803,   "ctx":"ftdc","msg":"Use of deprecated server parameter 'sslMode', please use 'tlsMode' instead."}
+{"t":{"$date":"2024-11-24T10:14:28.021+00:00"},"s":"W",  "c":"CONTROL",  "id":636300,  "ctx":"ftdc","msg":"Use of deprecated server parameter name","attr":{"deprecatedName":"wiredTigerConcurrentReadTransactions","canonicalName":"storageEngineConcurrentReadTransactions"}}
+{"t":{"$date":"2024-11-24T10:14:28.021+00:00"},"s":"W",  "c":"CONTROL",  "id":636300,  "ctx":"ftdc","msg":"Use of deprecated server parameter name","attr":{"deprecatedName":"wiredTigerConcurrentWriteTransactions","canonicalName":"storageEngineConcurrentWriteTransactions"}}
+{"t":{"$date":"2024-11-24T10:15:27.446+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732443327,"ts_usec":446430,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 34, snapshot max: 34 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:16:27.537+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732443387,"ts_usec":537603,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 35, snapshot max: 35 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:17:27.604+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732443447,"ts_usec":604251,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 36, snapshot max: 36 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:18:27.644+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732443507,"ts_usec":644380,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 37, snapshot max: 37 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:19:27.678+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732443567,"ts_usec":678712,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 38, snapshot max: 38 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:20:27.703+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732443627,"ts_usec":703335,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 39, snapshot max: 39 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:21:27.743+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732443687,"ts_usec":743446,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 40, snapshot max: 40 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:22:27.795+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732443747,"ts_usec":795052,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 41, snapshot max: 41 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:23:27.860+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732443807,"ts_usec":860305,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 42, snapshot max: 42 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:24:27.897+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732443867,"ts_usec":897621,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 43, snapshot max: 43 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:25:20.954+00:00"},"s":"I",  "c":"NETWORK",  "id":22943,   "ctx":"listener","msg":"Connection accepted","attr":{"remote":"172.17.0.1:41890","uuid":{"uuid":{"$uuid":"99713d3d-8cf0-4474-ab92-4d3fe7d91ee4"}},"connectionId":1,"connectionCount":1}}
+{"t":{"$date":"2024-11-24T10:25:20.961+00:00"},"s":"I",  "c":"NETWORK",  "id":51800,   "ctx":"conn1","msg":"client metadata","attr":{"remote":"172.17.0.1:41890","client":"conn1","negotiatedCompressors":[],"doc":{"driver":{"name":"nodejs|Mongoose","version":"3.7.4"},"os":{"type":"Windows_NT","name":"win32","architecture":"x64","version":"10.0.22631"},"platform":"'Node.js v20.17.0, LE (unified)","version":"3.7.4|5.13.22"}}}
+{"t":{"$date":"2024-11-24T10:25:20.974+00:00"},"s":"I",  "c":"NETWORK",  "id":22943,   "ctx":"listener","msg":"Connection accepted","attr":{"remote":"172.17.0.1:41896","uuid":{"uuid":{"$uuid":"e192a549-3a81-4bae-a067-2114acecfcf8"}},"connectionId":2,"connectionCount":2}}
+{"t":{"$date":"2024-11-24T10:25:20.975+00:00"},"s":"I",  "c":"NETWORK",  "id":51800,   "ctx":"conn2","msg":"client metadata","attr":{"remote":"172.17.0.1:41896","client":"conn2","negotiatedCompressors":[],"doc":{"driver":{"name":"nodejs|Mongoose","version":"3.7.4"},"os":{"type":"Windows_NT","name":"win32","architecture":"x64","version":"10.0.22631"},"platform":"'Node.js v20.17.0, LE (unified)","version":"3.7.4|5.13.22"}}}
+{"t":{"$date":"2024-11-24T10:25:20.987+00:00"},"s":"I",  "c":"ACCESS",   "id":20251,   "ctx":"conn2","msg":"Supported SASL mechanisms requested for unknown user","attr":{"user":{"user":"undefined","db":"course-goals"}}}
+{"t":{"$date":"2024-11-24T10:25:20.988+00:00"},"s":"I",  "c":"ACCESS",   "id":6788604, "ctx":"conn2","msg":"Auth metrics report","attr":{"metric":"acquireUser","micros":0}}
+{"t":{"$date":"2024-11-24T10:25:20.992+00:00"},"s":"I",  "c":"ACCESS",   "id":5286307, "ctx":"conn2","msg":"Failed to authenticate","attr":{"client":"172.17.0.1:41896","isSpeculative":true,"isClusterMember":false,"mechanism":"SCRAM-SHA-256","user":"undefined","db":"course-goals","error":"UserNotFound: Could not find user \"undefined\" for db \"course-goals\"","result":11,"metrics":{"conversation_duration":{"micros":4712,"summary":{"0":{"step":1,"step_total":2,"duration_micros":435}}}},"extraInfo":{}}}
+{"t":{"$date":"2024-11-24T10:25:20.995+00:00"},"s":"I",  "c":"ACCESS",   "id":6788604, "ctx":"conn2","msg":"Auth metrics report","attr":{"metric":"acquireUser","micros":0}}
+{"t":{"$date":"2024-11-24T10:25:20.996+00:00"},"s":"I",  "c":"ACCESS",   "id":5286307, "ctx":"conn2","msg":"Failed to authenticate","attr":{"client":"172.17.0.1:41896","isSpeculative":false,"isClusterMember":false,"mechanism":"SCRAM-SHA-1","user":"undefined","db":"course-goals","error":"UserNotFound: Could not find user \"undefined\" for db \"course-goals\"","result":11,"metrics":{"conversation_duration":{"micros":421,"summary":{"0":{"step":1,"step_total":2,"duration_micros":258}}}},"extraInfo":{}}}
+{"t":{"$date":"2024-11-24T10:25:21.008+00:00"},"s":"I",  "c":"NETWORK",  "id":22944,   "ctx":"conn1","msg":"Connection ended","attr":{"remote":"172.17.0.1:41890","uuid":{"uuid":{"$uuid":"99713d3d-8cf0-4474-ab92-4d3fe7d91ee4"}},"connectionId":1,"connectionCount":1}}
+{"t":{"$date":"2024-11-24T10:25:21.010+00:00"},"s":"I",  "c":"NETWORK",  "id":22944,   "ctx":"conn2","msg":"Connection ended","attr":{"remote":"172.17.0.1:41896","uuid":{"uuid":{"$uuid":"e192a549-3a81-4bae-a067-2114acecfcf8"}},"connectionId":2,"connectionCount":0}}
+{"t":{"$date":"2024-11-24T10:25:28.026+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732443928,"ts_usec":26753,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 44, snapshot max: 44 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:26:18.595+00:00"},"s":"I",  "c":"NETWORK",  "id":22943,   "ctx":"listener","msg":"Connection accepted","attr":{"remote":"172.17.0.1:44352","uuid":{"uuid":{"$uuid":"c80fdcf0-2391-4ba1-94bc-40a8564275ee"}},"connectionId":3,"connectionCount":1}}
+{"t":{"$date":"2024-11-24T10:26:18.598+00:00"},"s":"I",  "c":"NETWORK",  "id":51800,   "ctx":"conn3","msg":"client metadata","attr":{"remote":"172.17.0.1:44352","client":"conn3","negotiatedCompressors":[],"doc":{"driver":{"name":"nodejs|Mongoose","version":"3.7.4"},"os":{"type":"Windows_NT","name":"win32","architecture":"x64","version":"10.0.22631"},"platform":"'Node.js v20.17.0, LE (unified)","version":"3.7.4|5.13.22"}}}
+{"t":{"$date":"2024-11-24T10:26:18.608+00:00"},"s":"I",  "c":"NETWORK",  "id":22943,   "ctx":"listener","msg":"Connection accepted","attr":{"remote":"172.17.0.1:44354","uuid":{"uuid":{"$uuid":"ba3b897f-3d02-446a-ad54-2bd31c912bcf"}},"connectionId":4,"connectionCount":2}}
+{"t":{"$date":"2024-11-24T10:26:18.609+00:00"},"s":"I",  "c":"NETWORK",  "id":51800,   "ctx":"conn4","msg":"client metadata","attr":{"remote":"172.17.0.1:44354","client":"conn4","negotiatedCompressors":[],"doc":{"driver":{"name":"nodejs|Mongoose","version":"3.7.4"},"os":{"type":"Windows_NT","name":"win32","architecture":"x64","version":"10.0.22631"},"platform":"'Node.js v20.17.0, LE (unified)","version":"3.7.4|5.13.22"}}}
+{"t":{"$date":"2024-11-24T10:26:18.610+00:00"},"s":"I",  "c":"ACCESS",   "id":20251,   "ctx":"conn4","msg":"Supported SASL mechanisms requested for unknown user","attr":{"user":{"user":"undefined","db":"course-goals"}}}
+{"t":{"$date":"2024-11-24T10:26:18.610+00:00"},"s":"I",  "c":"ACCESS",   "id":6788604, "ctx":"conn4","msg":"Auth metrics report","attr":{"metric":"acquireUser","micros":0}}
+{"t":{"$date":"2024-11-24T10:26:18.610+00:00"},"s":"I",  "c":"ACCESS",   "id":5286307, "ctx":"conn4","msg":"Failed to authenticate","attr":{"client":"172.17.0.1:44354","isSpeculative":true,"isClusterMember":false,"mechanism":"SCRAM-SHA-256","user":"undefined","db":"course-goals","error":"UserNotFound: Could not find user \"undefined\" for db \"course-goals\"","result":11,"metrics":{"conversation_duration":{"micros":315,"summary":{"0":{"step":1,"step_total":2,"duration_micros":215}}}},"extraInfo":{}}}
+{"t":{"$date":"2024-11-24T10:26:18.613+00:00"},"s":"I",  "c":"ACCESS",   "id":6788604, "ctx":"conn4","msg":"Auth metrics report","attr":{"metric":"acquireUser","micros":0}}
+{"t":{"$date":"2024-11-24T10:26:18.613+00:00"},"s":"I",  "c":"ACCESS",   "id":5286307, "ctx":"conn4","msg":"Failed to authenticate","attr":{"client":"172.17.0.1:44354","isSpeculative":false,"isClusterMember":false,"mechanism":"SCRAM-SHA-1","user":"undefined","db":"course-goals","error":"UserNotFound: Could not find user \"undefined\" for db \"course-goals\"","result":11,"metrics":{"conversation_duration":{"micros":327,"summary":{"0":{"step":1,"step_total":2,"duration_micros":264}}}},"extraInfo":{}}}
+{"t":{"$date":"2024-11-24T10:26:18.617+00:00"},"s":"I",  "c":"NETWORK",  "id":22944,   "ctx":"conn3","msg":"Connection ended","attr":{"remote":"172.17.0.1:44352","uuid":{"uuid":{"$uuid":"c80fdcf0-2391-4ba1-94bc-40a8564275ee"}},"connectionId":3,"connectionCount":1}}
+{"t":{"$date":"2024-11-24T10:26:18.622+00:00"},"s":"I",  "c":"NETWORK",  "id":22944,   "ctx":"conn4","msg":"Connection ended","attr":{"remote":"172.17.0.1:44354","uuid":{"uuid":{"$uuid":"ba3b897f-3d02-446a-ad54-2bd31c912bcf"}},"connectionId":4,"connectionCount":0}}
+{"t":{"$date":"2024-11-24T10:26:28.058+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732443988,"ts_usec":58596,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 45, snapshot max: 45 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:27:28.117+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732444048,"ts_usec":117034,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 46, snapshot max: 46 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:28:28.150+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732444108,"ts_usec":149976,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 47, snapshot max: 47 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:29:28.179+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732444168,"ts_usec":179420,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 48, snapshot max: 48 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:30:28.244+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732444228,"ts_usec":244828,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 49, snapshot max: 49 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:31:28.293+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732444288,"ts_usec":293640,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 50, snapshot max: 50 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:32:28.319+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732444348,"ts_usec":318980,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 51, snapshot max: 51 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:33:28.376+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732444408,"ts_usec":376006,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 52, snapshot max: 52 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:34:28.400+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732444468,"ts_usec":400128,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 53, snapshot max: 53 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:35:28.459+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732444528,"ts_usec":459393,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 54, snapshot max: 54 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:36:28.513+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732444588,"ts_usec":513398,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 55, snapshot max: 55 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:37:28.573+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732444648,"ts_usec":572965,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 56, snapshot max: 56 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:38:28.633+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732444708,"ts_usec":633000,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 57, snapshot max: 57 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:39:28.660+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732444768,"ts_usec":660209,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 58, snapshot max: 58 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:39:39.710+00:00"},"s":"I",  "c":"NETWORK",  "id":22943,   "ctx":"listener","msg":"Connection accepted","attr":{"remote":"172.17.0.1:41744","uuid":{"uuid":{"$uuid":"827f761d-2989-456d-9fdf-24d59debc22a"}},"connectionId":5,"connectionCount":1}}
+{"t":{"$date":"2024-11-24T10:39:39.714+00:00"},"s":"I",  "c":"NETWORK",  "id":22943,   "ctx":"listener","msg":"Connection accepted","attr":{"remote":"172.17.0.1:41746","uuid":{"uuid":{"$uuid":"dec31412-42ee-4b9e-9db0-e11cb3d009b8"}},"connectionId":6,"connectionCount":2}}
+{"t":{"$date":"2024-11-24T10:39:39.725+00:00"},"s":"I",  "c":"EXECUTOR", "id":22988,   "ctx":"conn5","msg":"Error receiving request from client. Ending connection from remote","attr":{"error":{"code":17,"codeName":"ProtocolError","errmsg":"Client sent an HTTP request over a native MongoDB connection"},"remote":"172.17.0.1:41744","connectionId":5}}
+{"t":{"$date":"2024-11-24T10:39:39.726+00:00"},"s":"I",  "c":"NETWORK",  "id":22944,   "ctx":"conn5","msg":"Connection ended","attr":{"remote":"172.17.0.1:41744","uuid":{"uuid":{"$uuid":"827f761d-2989-456d-9fdf-24d59debc22a"}},"connectionId":5,"connectionCount":1}}
+{"t":{"$date":"2024-11-24T10:39:39.793+00:00"},"s":"I",  "c":"EXECUTOR", "id":22988,   "ctx":"conn6","msg":"Error receiving request from client. Ending connection from remote","attr":{"error":{"code":17,"codeName":"ProtocolError","errmsg":"Client sent an HTTP request over a native MongoDB connection"},"remote":"172.17.0.1:41746","connectionId":6}}
+{"t":{"$date":"2024-11-24T10:39:39.793+00:00"},"s":"I",  "c":"NETWORK",  "id":22944,   "ctx":"conn6","msg":"Connection ended","attr":{"remote":"172.17.0.1:41746","uuid":{"uuid":{"$uuid":"dec31412-42ee-4b9e-9db0-e11cb3d009b8"}},"connectionId":6,"connectionCount":0}}
+{"t":{"$date":"2024-11-24T10:40:28.697+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732444828,"ts_usec":696945,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 59, snapshot max: 59 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:40:31.963+00:00"},"s":"I",  "c":"NETWORK",  "id":22943,   "ctx":"listener","msg":"Connection accepted","attr":{"remote":"172.17.0.1:44310","uuid":{"uuid":{"$uuid":"6d827239-f15f-4204-bf4b-56f5a22351e2"}},"connectionId":7,"connectionCount":1}}
+{"t":{"$date":"2024-11-24T10:40:31.971+00:00"},"s":"I",  "c":"NETWORK",  "id":51800,   "ctx":"conn7","msg":"client metadata","attr":{"remote":"172.17.0.1:44310","client":"conn7","negotiatedCompressors":[],"doc":{"driver":{"name":"nodejs|Mongoose","version":"3.7.4"},"os":{"type":"Windows_NT","name":"win32","architecture":"x64","version":"10.0.22631"},"platform":"'Node.js v20.17.0, LE (unified)","version":"3.7.4|5.13.22"}}}
+{"t":{"$date":"2024-11-24T10:40:31.993+00:00"},"s":"I",  "c":"NETWORK",  "id":22944,   "ctx":"conn7","msg":"Connection ended","attr":{"remote":"172.17.0.1:44310","uuid":{"uuid":{"$uuid":"6d827239-f15f-4204-bf4b-56f5a22351e2"}},"connectionId":7,"connectionCount":0}}
+{"t":{"$date":"2024-11-24T10:41:28.721+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732444888,"ts_usec":721683,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 60, snapshot max: 60 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:42:28.764+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732444948,"ts_usec":764719,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 61, snapshot max: 61 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:43:28.833+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732445008,"ts_usec":833443,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 62, snapshot max: 62 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:44:28.877+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732445068,"ts_usec":877869,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 63, snapshot max: 63 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:45:28.954+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732445128,"ts_usec":954195,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 64, snapshot max: 64 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:46:28.996+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732445188,"ts_usec":996047,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 65, snapshot max: 65 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:47:29.071+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732445249,"ts_usec":70936,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 66, snapshot max: 66 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:48:29.120+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732445309,"ts_usec":120118,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 67, snapshot max: 67 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:49:29.166+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732445369,"ts_usec":166216,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 68, snapshot max: 68 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:50:20.072+00:00"},"s":"I",  "c":"NETWORK",  "id":22943,   "ctx":"listener","msg":"Connection accepted","attr":{"remote":"172.17.0.1:51912","uuid":{"uuid":{"$uuid":"66c252d8-0f8e-480e-ac1d-ab60f03889b9"}},"connectionId":8,"connectionCount":1}}
+{"t":{"$date":"2024-11-24T10:50:20.073+00:00"},"s":"I",  "c":"NETWORK",  "id":51800,   "ctx":"conn8","msg":"client metadata","attr":{"remote":"172.17.0.1:51912","client":"conn8","negotiatedCompressors":[],"doc":{"driver":{"name":"nodejs|Mongoose","version":"3.7.4"},"os":{"type":"Windows_NT","name":"win32","architecture":"x64","version":"10.0.22631"},"platform":"'Node.js v20.17.0, LE (unified)","version":"3.7.4|5.13.22"}}}
+{"t":{"$date":"2024-11-24T10:50:29.203+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732445429,"ts_usec":203580,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 69, snapshot max: 69 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:50:30.615+00:00"},"s":"I",  "c":"NETWORK",  "id":22943,   "ctx":"listener","msg":"Connection accepted","attr":{"remote":"172.17.0.1:59882","uuid":{"uuid":{"$uuid":"40602ca5-355c-415c-af90-1d0d858dba0a"}},"connectionId":9,"connectionCount":2}}
+{"t":{"$date":"2024-11-24T10:50:30.616+00:00"},"s":"I",  "c":"NETWORK",  "id":51800,   "ctx":"conn9","msg":"client metadata","attr":{"remote":"172.17.0.1:59882","client":"conn9","negotiatedCompressors":[],"doc":{"driver":{"name":"nodejs|Mongoose","version":"3.7.4"},"os":{"type":"Windows_NT","name":"win32","architecture":"x64","version":"10.0.22631"},"platform":"'Node.js v20.17.0, LE (unified)","version":"3.7.4|5.13.22"}}}
+{"t":{"$date":"2024-11-24T10:50:37.020+00:00"},"s":"I",  "c":"NETWORK",  "id":22943,   "ctx":"listener","msg":"Connection accepted","attr":{"remote":"172.17.0.1:52196","uuid":{"uuid":{"$uuid":"21dfb235-fd01-4b99-9a20-a688ec8fabfe"}},"connectionId":10,"connectionCount":3}}
+{"t":{"$date":"2024-11-24T10:50:37.024+00:00"},"s":"I",  "c":"NETWORK",  "id":51800,   "ctx":"conn10","msg":"client metadata","attr":{"remote":"172.17.0.1:52196","client":"conn10","negotiatedCompressors":[],"doc":{"driver":{"name":"nodejs|Mongoose","version":"3.7.4"},"os":{"type":"Windows_NT","name":"win32","architecture":"x64","version":"10.0.22631"},"platform":"'Node.js v20.17.0, LE (unified)","version":"3.7.4|5.13.22"}}}        
+{"t":{"$date":"2024-11-24T10:50:37.032+00:00"},"s":"I",  "c":"NETWORK",  "id":6788700, "ctx":"conn10","msg":"Received first command on ingress connection since session start or auth handshake","attr":{"elapsedMillis":8}}
+{"t":{"$date":"2024-11-24T10:51:29.228+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732445489,"ts_usec":228531,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 70, snapshot max: 70 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:52:29.263+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732445549,"ts_usec":263227,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 71, snapshot max: 71 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:53:29.311+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732445609,"ts_usec":311682,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 72, snapshot max: 72 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:54:29.365+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732445669,"ts_usec":365586,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 74, snapshot max: 74 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:55:29.453+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732445729,"ts_usec":452005,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 76, snapshot max: 76 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:56:29.491+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732445789,"ts_usec":491648,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 77, snapshot max: 77 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:57:29.527+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732445849,"ts_usec":527599,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 78, snapshot max: 78 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:58:29.568+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732445909,"ts_usec":563061,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 79, snapshot max: 79 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T10:59:29.608+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732445969,"ts_usec":608319,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 80, snapshot max: 80 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T11:00:29.636+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732446029,"ts_usec":635930,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 81, snapshot max: 81 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T11:01:29.663+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732446089,"ts_usec":663717,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 82, snapshot max: 82 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T11:02:29.732+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732446149,"ts_usec":732339,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 83, snapshot max: 83 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T11:03:29.758+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732446209,"ts_usec":758822,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 84, snapshot max: 84 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T11:04:29.831+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732446269,"ts_usec":831512,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 85, snapshot max: 85 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T11:05:29.883+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732446329,"ts_usec":883451,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 86, snapshot max: 86 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T11:06:29.928+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732446389,"ts_usec":928251,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 87, snapshot max: 87 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T11:07:29.981+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732446449,"ts_usec":981213,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 88, snapshot max: 88 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T11:08:30.026+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732446510,"ts_usec":26516,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 89, snapshot max: 89 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T11:09:30.060+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732446570,"ts_usec":59958,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 90, snapshot max: 90 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T11:10:30.079+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732446630,"ts_usec":79513,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 91, snapshot max: 91 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T11:11:30.103+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732446690,"ts_usec":103676,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 92, snapshot max: 92 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T11:12:30.127+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732446750,"ts_usec":127614,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 93, snapshot max: 93 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T11:13:30.158+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732446810,"ts_usec":158589,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 94, snapshot max: 94 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T11:14:30.196+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732446870,"ts_usec":196650,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 96, snapshot max: 96 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+{"t":{"$date":"2024-11-24T11:15:30.240+00:00"},"s":"I",  "c":"WTCHKPT",  "id":22430,   "ctx":"Checkpointer","msg":"WiredTiger message","attr":{"message":{"ts_sec":1732446930,"ts_usec":240820,"thread":"1:0x7f08d3f806c0","session_name":"WT_SESSION.checkpoint","category":"WT_VERB_CHECKPOINT_PROGRESS","category_id":7,"verbose_level":"DEBUG_1","verbose_level_id":1,"msg":"saving checkpoint snapshot min: 97, snapshot max: 97 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1"}}}
+
+
+D:\CNPTPM\docker\client-server\backend>docker logs backend-app
+
+> backend@1.0.0 start
+> nodemon app.js
+
+[nodemon] 2.0.22
+[nodemon] to restart at any time, enter `rs`
+[nodemon] watching path(s): *.*
+[nodemon] watching extensions: js,mjs,json
+[nodemon] starting `node app.js`
+CONNECTED TO MONGODB!!
+
+
+Microsoft Windows [Version 10.0.22631.4460]
+(c) Microsoft Corporation. All rights reserved.
+
+D:\CNPTPM\docker\client-server\frontend>docker logs frontend-app
+Compiled successfully!
+
+You can now view docker-frontend in the browser.
+
+  Local:            http://localhost:3000
+  On Your Network:  http://172.17.0.4:3000
+
+Note that the development build is not optimized.
+To create a production build, use npm run build.
+
+webpack compiled successfully
+
+D:\CNPTPM\docker\client-server\frontend>
+
